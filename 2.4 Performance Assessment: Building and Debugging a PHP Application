@@ -1,0 +1,72 @@
+<html>
+
+<head>
+<title>Week2 PA - Cameron Bellinger</title>
+</head>
+
+<body>
+<form method='POST'>
+<h3>Enter your first name: <input type="text" name="fname"></h3>
+<h3>Enter your last name: <input type="text" name="lname"></h3>
+<h3>Enter your Date of Birth: <input type="text" name="DOB"></h3>
+<h3>Enter your favorite color: <input type="text" name="fav_col"></h3>
+<h3>Enter your favorite place to visit: <input type="text" name="fav_pl"></h3>
+<input type="submit" value="Submit Values">
+</form>
+
+<?php
+//Declare and clear variables for display
+$first_name = '';
+$last_name = '';
+$DOB = '';
+$fav_col = '';
+$fav_pl = '';
+
+//Retrieve values from the form and store in local variables
+if (isset($_POST['fname']))
+$first_name = $_POST['fname'];
+
+if (isset($_POST['lname']))
+$last_name = $_POST['lname'];
+
+if (isset($_POST['DOB']))
+$DOB = $_POST['DOB'];
+
+if (isset($_POST['fav_col']))
+$fav_col = $_POST['fav_col'];
+
+if (isset($_POST['fav_pl']))
+$fav_pl = $_POST['fav_pl'];
+
+
+//Display the values entered or a message if nothing was entered
+
+if (strlen($first_name) > 0)
+echo "<h3>Your first name is: $first_name</h3>";
+else
+echo "<h3>You didn't enter your first name.</h3>";
+
+if (strlen($last_name) > 0)
+echo "<h3>Your last name is: $last_name</h3>";
+else
+echo "<h3>You didn't enter your last name.</h3>";
+
+if (strlen($DOB) > 0)
+echo "<h3>Your date of birth is: $DOB</h3>";
+else
+echo "<h3>You didn't enter your date of birth.</h3>";
+
+if (strlen($fav_col) > 0)
+echo "<h3>Your favorite color is: $fav_col</h3>";
+else
+echo "<h3>You didn't enter your favorite color.</h3>";
+
+if (strlen($fav_pl) > 0)
+echo "<h3>Your favorite place to visit is: $fav_pl</h3>";
+else
+echo "<h3>You didn't enter your favorite place to visit.</h3>";
+?>
+
+</body>
+
+</html>
