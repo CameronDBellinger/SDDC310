@@ -1,0 +1,227 @@
+<?php
+/**********************************************
+ * PLUG & PLAY PHP CRUD TEMPLATE
+ * --------------------------------------------
+ * CHANGE THE SECTIONS MARKED WITH:
+ * >>> CHANGE THIS <<<
+ **********************************************/
+
+/********** 1. DATABASE CONNECTION **********/
+$hostname = "localhost";          // >>> CHANGE THIS <<< (usually localhost)
+$username = "root";               // >>> CHANGE THIS <<< (your MySQL username)
+$password = "";                   // >>> CHANGE THIS <<< (your MySQL password)
+$dbname   = "my_database";        // >>> CHANGE THIS <<< (your database name)
+
+$conn = mysqli_connect($hostname, $username, $password, $dbname);
+
+if (!$conn) {
+    die("Database connection failed: " . mysqli_connect_error());
+}
+
+/********** 2. CREATE TABLE IF NOT EXISTS **********
+ * Change table name + columns to match your project
+ ***************************************************/
+$createTable = "
+CREATE TABLE IF NOT EXISTS mytable (
+    RecordID INT NOT NULL AUTO_INCREMENT,
+    FirstName VARCHAR(50),
+    LastName VARCHAR(50),
+    Email VARCHAR(100),
+    FavoriteNum INT,
+    PRIMARY KEY (RecordID)
+)";
+
+mysqli_query($conn, $createTable);
+
+/********** 3. VARIABLES **********/
+$recordID = -1;
+$firstName = "";
+$lastName = "";
+$email = "";
+$favNum = "";
+
+$add = $edit = $update = $delete = false;
+
+/********** 4. DETERMINE WHICH BUTTON WAS PRESSED **********/
+if (isset($_POST['record_id'])) {
+    $recordID = (int)$_POST['record_id'];
+
+    $add    = isset($_POST['add']);
+    $edit   = isset($_POST['edit']);
+    $update = isset($_POST['update']);
+    $delete = isset($_POST['delete']);
+}
+
+/********** 5. ADD RECORD **********/
+if ($add) {
+
+    $firstName = mysqli_real_escape_string($conn, $_POST['first_name']);
+    $lastName  = mysqli_real_escape_string($conn, $_POST['last_name']);
+    $email     = mysqli_real_escape_string($conn, $_POST['email']);
+    $favNum    = (int)$_POST['fav_num'];
+
+    $query = "
+    INSERT INTO mytable (FirstName, LastName, Email, FavoriteNum)
+    VALUES ('$firstName', '$lastName', '$email', $favNum)
+    ";
+
+    mysqli_query($conn, $query);
+
+    // Reset form
+    $recordID = -1;
+    $firstName = $lastName = $email = "";
+    $favNum = "";
+}
+
+/********** 6. EDIT RECORD (LOAD VALUES INTO FORM) **********/
+else if ($edit) {
+
+    $query = "SELECT * FROM mytable WHERE RecordID = $recordID";
+    $result = mysqli_query($conn, $query);
+    $row = mysqli_fetch_assoc($result);
+
+    if ($row) {
+        $firstName = $row["FirstName"];
+        $lastName  = $row["LastName"];
+        $email     = $row["Email"];
+        $favNum    = $row["FavoriteNum"];
+    }
+}
+
+/********** 7. UPDATE RECORD (WITH CONFIRMATION) **********/
+else if ($update) {
+
+    // CONFIRMATION POPUP
+    echo "<script>
+        if (!confirm('Are you sure you want to UPDATE this record?')) {
+            window.location.href = window.location.href;
+        }
+    </script>";
+
+    $firstName = mysqli_real_escape_string($conn, $_POST['first_name']);
+    $lastName  = mysqli_real_escape_string($conn, $_POST['last_name']);
+    $email     = mysqli_real_escape_string($conn, $_POST['email']);
+    $favNum    = (int)$_POST['fav_num'];
+
+    $query = "
+    UPDATE mytable SET
+        FirstName = '$firstName',
+        LastName = '$lastName',
+        Email = '$email',
+        FavoriteNum = $favNum
+    WHERE RecordID = $recordID
+    ";
+
+    mysqli_query($conn, $query);
+
+    // Reset form
+    $recordID = -1;
+    $firstName = $lastName = $email = "";
+    $favNum = "";
+}
+
+/********** 8. DELETE RECORD (WITH CONFIRMATION) **********/
+else if ($delete) {
+
+    echo "<script>
+        if (!confirm('Are you sure you want to DELETE this record?')) {
+            window.location.href = window.location.href;
+        }
+    </script>";
+
+    $query = "DELETE FROM mytable WHERE RecordID = $recordID";
+    mysqli_query($conn, $query);
+
+    $recordID = -1;
+}
+
+/********** 9. GET ALL RECORDS **********/
+$query = "SELECT * FROM mytable ORDER BY RecordID";
+$result = mysqli_query($conn, $query);
+
+?>
+<!DOCTYPE html>
+<html>
+<head>
+<title>Reusable CRUD Template</title>
+
+<style>
+body { font-family: Arial; margin: 30px; }
+table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
+table, th, td { border: 1px solid black; }
+th, td { padding: 10px; text-align: center; }
+.form-section { border: 1px solid black; padding: 20px; width: 400px; }
+.button { padding: 8px 15px; cursor: pointer; }
+</style>
+
+</head>
+<body>
+
+<h1>Reusable CRUD Template</h1>
+
+<table>
+<tr>
+    <th>ID</th>
+    <th>First</th>
+    <th>Last</th>
+    <th>Email</th>
+    <th>Favorite #</th>
+    <th>Edit</th>
+    <th>Delete</th>
+</tr>
+
+<?php while ($row = mysqli_fetch_assoc($result)): ?>
+<tr>
+    <td><?= $row["RecordID"] ?></td>
+    <td><?= $row["FirstName"] ?></td>
+    <td><?= $row["LastName"] ?></td>
+    <td><?= $row["Email"] ?></td>
+    <td><?= $row["FavoriteNum"] ?></td>
+
+    <td>
+        <form method="POST">
+            <input type="hidden" name="record_id" value="<?= $row["RecordID"] ?>">
+            <input class="button" type="submit" name="edit" value="Edit">
+        </form>
+    </td>
+
+    <td>
+        <form method="POST">
+            <input type="hidden" name="record_id" value="<?= $row["RecordID"] ?>">
+            <input class="button" type="submit" name="delete" value="Delete">
+        </form>
+    </td>
+</tr>
+<?php endwhile; ?>
+</table>
+
+<div class="form-section">
+<h2><?= $edit ? "Update Record" : "Add Record" ?></h2>
+
+<form method="POST">
+
+<input type="hidden" name="record_id" value="<?= $recordID ?>">
+
+<label>First Name:</label><br>
+<input type="text" name="first_name" value="<?= $firstName ?>" required><br>
+
+<label>Last Name:</label><br>
+<input type="text" name="last_name" value="<?= $lastName ?>" required><br>
+
+<label>Email:</label><br>
+<input type="email" name="email" value="<?= $email ?>" required><br>
+
+<label>Favorite Number:</label><br>
+<input type="number" name="fav_num" value="<?= $favNum ?>" required><br><br>
+
+<?php if ($edit): ?>
+    <input class="button" type="submit" name="update" value="Update">
+<?php else: ?>
+    <input class="button" type="submit" name="add" value="Add">
+<?php endif; ?>
+
+</form>
+</div>
+
+</body>
+</html>
