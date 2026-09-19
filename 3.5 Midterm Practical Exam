@@ -1,0 +1,503 @@
+<?php
+// Connect to Database
+$hostname = "localhost";
+$username = "ecpi_user";
+$password = "Password1";
+$dbname = "sdc310midterm";
+
+$conn = mysqli_connect($hostname, $username, $password, $dbname);
+
+if (!$conn) {
+die("Database connection failed: " . mysqli_connect_error());
+}
+
+// Create the table if it does not already exist
+$createTable = "CREATE TABLE IF NOT EXISTS personalinfo (
+AddressNo INT NOT NULL AUTO_INCREMENT,
+FirstName VARCHAR(25) NOT NULL,
+LastName VARCHAR(30) NOT NULL,
+Street VARCHAR(100) NOT NULL,
+City VARCHAR(25) NOT NULL,
+State VARCHAR(2) NOT NULL,
+Zip INT(10) NOT NULL,
+PRIMARY KEY (AddressNo)
+)";
+
+if (!mysqli_query($conn, $createTable)) {
+die("Table creation error: " . mysqli_error($conn));
+}
+
+// Add two sample addresses if the table is empty
+$countQuery = "SELECT COUNT(*) AS total FROM personalinfo";
+$countResult = mysqli_query($conn, $countQuery);
+$countRow = mysqli_fetch_assoc($countResult);
+
+if ($countRow["total"] == 0) {
+
+$sample1 = "INSERT INTO personalinfo
+(FirstName, LastName, Street, City, State, Zip)
+VALUES
+('Cameron', 'Bellinger', '1111 Up St', 'Uptown', 'UV', 12345)";
+
+$sample2 = "INSERT INTO personalinfo
+(FirstName, LastName, Street, City, State, Zip)
+VALUES
+('Jan', 'Smith', '1111 Down St', 'DownVille', 'DV', 54321)";
+
+mysqli_query($conn, $sample1);
+mysqli_query($conn, $sample2);
+}
+
+// Variables
+$addressNo = -1;
+$firstName = "";
+$lastName = "";
+$street = "";
+$city = "";
+$state = "";
+$zip = 0;
+
+$add = false;
+$edit = false;
+$update = false;
+$delete = false;
+
+// Determine which button was clicked
+if (isset($_POST['address_no'])) {
+
+$addressNo = (int)$_POST['address_no'];
+
+$add = isset($_POST['add']);
+$edit = isset($_POST['edit']);
+$update = isset($_POST['update']);
+$delete = isset($_POST['delete']);
+}
+
+// ADD
+if ($add) {
+
+$firstName = mysqli_real_escape_string($conn, $_POST['first_name']);
+$lastName = mysqli_real_escape_string($conn, $_POST['last_name']);
+$street = mysqli_real_escape_string($conn, $_POST['street']);
+$city = mysqli_real_escape_string($conn, $_POST['city']);
+$state = mysqli_real_escape_string($conn, $_POST['state']);
+$zip = (int)$_POST['zip'];
+
+$query = "INSERT INTO personalinfo
+(FirstName, LastName, Street, City, State, Zip)
+VALUES
+('$firstName', '$lastName', '$street', '$city', '$state', $zip)";
+
+if (!mysqli_query($conn, $query)) {
+die("Add error: " . mysqli_error($conn));
+}
+
+$addressNo = -1;
+$firstName = "";
+$lastName = "";
+$street = "";
+$city = "";
+$state = "";
+$zip = 0;
+}
+
+// EDIT
+else if ($edit) {
+
+$query = "SELECT * FROM personalinfo
+WHERE AddressNo = $addressNo";
+
+$result = mysqli_query($conn, $query);
+
+if (!$result) {
+die("Edit error: " . mysqli_error($conn));
+}
+
+$row = mysqli_fetch_assoc($result);
+
+if ($row) {
+$firstName = $row["FirstName"];
+$lastName = $row["LastName"];
+$street = $row["Street"];
+$city = $row["City"];
+$state = $row["State"];
+$zip = $row["Zip"];
+}
+}
+
+// UPDATE
+else if ($update) {
+
+$firstName = mysqli_real_escape_string($conn, $_POST['first_name']);
+$lastName = mysqli_real_escape_string($conn, $_POST['last_name']);
+$street = mysqli_real_escape_string($conn, $_POST['street']);
+$city = mysqli_real_escape_string($conn, $_POST['city']);
+$state = mysqli_real_escape_string($conn, $_POST['state']);
+$zip = (int)$_POST['zip'];
+
+$query = "UPDATE personalinfo SET
+FirstName = '$firstName',
+LastName = '$lastName',
+Street = '$street',
+City = '$city',
+State = '$state',
+Zip = $zip
+WHERE AddressNo = $addressNo";
+
+if (!mysqli_query($conn, $query)) {
+die("Update error: " . mysqli_error($conn));
+}
+
+$addressNo = -1;
+$firstName = "";
+$lastName = "";
+$street = "";
+$city = "";
+$state = "";
+$zip = 0;
+}
+
+// DELETE
+else if ($delete) {
+
+$query = "DELETE FROM personalinfo
+WHERE AddressNo = $addressNo";
+
+if (!mysqli_query($conn, $query)) {
+die("Delete error: " . mysqli_error($conn));
+}
+
+$addressNo = -1;
+}
+
+// Get all addresses
+$query = "SELECT * FROM personalinfo ORDER BY AddressNo";
+
+$result = mysqli_query($conn, $query);
+
+if (!$result) {
+die("Display error: " . mysqli_error($conn));
+}
+?>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Cameron Bellinger Midterm</title>
+
+<style>
+
+body {
+font-family: Arial, sans-serif;
+margin: 30px;
+}
+
+h1 {
+color: darkblue;
+}
+
+table {
+border-collapse: collapse;
+width: 100%;
+margin-bottom: 30px;
+}
+
+table, th, td {
+border: 1px solid black;
+}
+
+th, td {
+padding: 10px;
+text-align: center;
+}
+
+th {
+background-color: lightblue;
+}
+
+tr:nth-child(even) {
+background-color: whitesmoke;
+}
+
+tr:nth-child(odd) {
+background-color: lightgray;
+}
+
+input {
+margin: 5px;
+padding: 7px;
+}
+
+.form-section {
+border: 1px solid black;
+padding: 20px;
+width: 500px;
+}
+
+.button {
+padding: 8px 15px;
+cursor: pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Cameron Bellinger Midterm</h1>
+
+<h2>Address Book</h2>
+
+<table>
+
+<tr>
+<th>Address No.</th>
+<th>First Name</th>
+<th>Last Name</th>
+<th>Street</th>
+<th>City</th>
+<th>State</th>
+<th>Zip</th>
+<th>Edit</th>
+<th>Delete</th>
+</tr>
+
+<?php while ($row = mysqli_fetch_assoc($result)): ?>
+
+<tr>
+
+<td>
+<?php echo htmlspecialchars($row["AddressNo"]); ?>
+</td>
+
+<td>
+<?php echo htmlspecialchars($row["FirstName"]); ?>
+</td>
+
+<td>
+<?php echo htmlspecialchars($row["LastName"]); ?>
+</td>
+
+<td>
+<?php echo htmlspecialchars($row["Street"]); ?>
+</td>
+
+<td>
+<?php echo htmlspecialchars($row["City"]); ?>
+</td>
+
+<td>
+<?php echo htmlspecialchars($row["State"]); ?>
+</td>
+
+<td>
+<?php echo htmlspecialchars($row["Zip"]); ?>
+</td>
+
+<td>
+
+<form method="POST">
+
+<input
+type="hidden"
+name="address_no"
+value="<?php echo $row["AddressNo"]; ?>"
+>
+
+<input
+class="button"
+type="submit"
+name="edit"
+value="Edit"
+>
+
+</form>
+
+</td>
+
+<td>
+
+<form method="POST">
+
+<input
+type="hidden"
+name="address_no"
+value="<?php echo $row["AddressNo"]; ?>"
+>
+
+<input
+class="button"
+type="submit"
+name="delete"
+value="Delete"
+>
+
+</form>
+
+</td>
+
+</tr>
+
+<?php endwhile; ?>
+
+</table>
+
+<div class="form-section">
+
+<h2>
+
+<?php
+
+if ($edit) {
+echo "Update Address";
+}
+else {
+echo "Add Address";
+}
+
+?>
+
+</h2>
+
+<form method="POST">
+
+<input
+type="hidden"
+name="address_no"
+value="<?php echo $addressNo; ?>"
+>
+
+<label>First Name:</label>
+<br>
+
+<input
+type="text"
+name="first_name"
+maxlength="25"
+value="<?php echo htmlspecialchars($firstName); ?>"
+required
+>
+
+<br>
+
+<label>Last Name:</label>
+<br>
+
+<input
+type="text"
+name="last_name"
+maxlength="30"
+value="<?php echo htmlspecialchars($lastName); ?>"
+required
+>
+
+<br>
+
+<label>Street:</label>
+<br>
+
+<input
+type="text"
+name="street"
+maxlength="100"
+value="<?php echo htmlspecialchars($street); ?>"
+required
+>
+
+<br>
+
+<label>City:</label>
+<br>
+
+<input
+type="text"
+name="city"
+maxlength="25"
+value="<?php echo htmlspecialchars($city); ?>"
+required
+>
+
+<br>
+
+<label>State:</label>
+<br>
+
+<input
+type="text"
+name="state"
+maxlength="2"
+value="<?php echo htmlspecialchars($state); ?>"
+required
+>
+
+<br>
+
+<label>Zip:</label>
+<br>
+
+<input
+type="number"
+name="zip"
+value="<?php echo htmlspecialchars($zip); ?>"
+required
+>
+
+<br><br>
+
+<?php if ($edit): ?>
+
+<input
+class="button"
+type="submit"
+name="update"
+value="Update Address"
+>
+
+<?php else: ?>
+
+<input
+class="button"
+type="submit"
+name="add"
+value="Add Address"
+>
+
+<?php endif; ?>
+
+</form>
+
+</div>
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+{
+// Use IntelliSense to learn about possible attributes.
+// Hover to view descriptions of existing attributes.
+// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+"version": "0.2.0",
+"configurations": [
+
+
+{
+"type": "pwa-chrome",
+"request": "launch",
+"name": "Launch Chrome against localhost",
+"url": "http://localhost/sdc310midterm/user_list.php",
+"webRoot": "${workspaceFolder}"
+}
+]
+}
