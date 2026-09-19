@@ -1,0 +1,487 @@
+<?php
+// Connect to Database
+$hostname = "localhost";
+$username = "ecpi_user";
+$password = "Password1";
+$dbname = "BellingerWeek3pa";
+
+$conn = mysqli_connect($hostname, $username, $password, $dbname);
+
+if (!$conn) {
+die("Database connection failed: " . mysqli_connect_error());
+}
+
+/*
+Create the table if it does not already exist.
+This prevents errors if the table has not been created yet.
+*/
+$createTable = "CREATE TABLE IF NOT EXISTS personalinfo (
+ID INT NOT NULL AUTO_INCREMENT,
+Name VARCHAR(100) NOT NULL,
+DateOfBirth DATE NOT NULL,
+FavoriteColor VARCHAR(50) NOT NULL,
+FavoritePlace VARCHAR(100) NOT NULL,
+Nickname VARCHAR(100) NOT NULL,
+PRIMARY KEY (ID)
+)";
+
+if (!mysqli_query($conn, $createTable)) {
+die("Table creation error: " . mysqli_error($conn));
+}
+
+/*
+Add two sample people if the table is empty.
+*/
+$countQuery = "SELECT COUNT(*) AS total FROM personalinfo";
+$countResult = mysqli_query($conn, $countQuery);
+$countRow = mysqli_fetch_assoc($countResult);
+
+if ($countRow["total"] == 0) {
+
+$sample1 = "INSERT INTO personalinfo
+(Name, DateOfBirth, FavoriteColor, FavoritePlace, Nickname)
+VALUES
+('Cameron Bellinger', '2000-05-15', 'Blue', 'Virginia Beach', 'Cam')";
+
+$sample2 = "INSERT INTO personalinfo
+(Name, DateOfBirth, FavoriteColor, FavoritePlace, Nickname)
+VALUES
+('Jordan Smith', '2001-08-22', 'Green', 'New York City', 'Jordy')";
+
+mysqli_query($conn, $sample1);
+mysqli_query($conn, $sample2);
+}
+
+// Variables
+$id = -1;
+$name = "";
+$dob = "";
+$favoriteColor = "";
+$favoritePlace = "";
+$nickname = "";
+
+$add = false;
+$edit = false;
+$update = false;
+$delete = false;
+
+// Determine which button was clicked
+if (isset($_POST['id'])) {
+
+$id = (int)$_POST['id'];
+
+$add = isset($_POST['add']);
+$edit = isset($_POST['edit']);
+$update = isset($_POST['update']);
+$delete = isset($_POST['delete']);
+}
+
+// ADD
+if ($add) {
+
+$name = mysqli_real_escape_string($conn, $_POST['name']);
+$dob = mysqli_real_escape_string($conn, $_POST['dob']);
+$favoriteColor = mysqli_real_escape_string($conn, $_POST['favorite_color']);
+$favoritePlace = mysqli_real_escape_string($conn, $_POST['favorite_place']);
+$nickname = mysqli_real_escape_string($conn, $_POST['nickname']);
+
+$query = "INSERT INTO personalinfo
+(Name, DateOfBirth, FavoriteColor, FavoritePlace, Nickname)
+VALUES
+('$name', '$dob', '$favoriteColor', '$favoritePlace', '$nickname')";
+
+if (!mysqli_query($conn, $query)) {
+die("Add error: " . mysqli_error($conn));
+}
+
+$id = -1;
+$name = "";
+$dob = "";
+$favoriteColor = "";
+$favoritePlace = "";
+$nickname = "";
+}
+
+// EDIT
+else if ($edit) {
+
+$query = "SELECT * FROM personalinfo WHERE ID = $id";
+
+$result = mysqli_query($conn, $query);
+
+if (!$result) {
+die("Edit error: " . mysqli_error($conn));
+}
+
+$row = mysqli_fetch_assoc($result);
+
+if ($row) {
+$name = $row["Name"];
+$dob = $row["DateOfBirth"];
+$favoriteColor = $row["FavoriteColor"];
+$favoritePlace = $row["FavoritePlace"];
+$nickname = $row["Nickname"];
+}
+}
+
+// UPDATE
+else if ($update) {
+
+$name = mysqli_real_escape_string($conn, $_POST['name']);
+$dob = mysqli_real_escape_string($conn, $_POST['dob']);
+$favoriteColor = mysqli_real_escape_string($conn, $_POST['favorite_color']);
+$favoritePlace = mysqli_real_escape_string($conn, $_POST['favorite_place']);
+$nickname = mysqli_real_escape_string($conn, $_POST['nickname']);
+
+$query = "UPDATE personalinfo SET
+Name = '$name',
+DateOfBirth = '$dob',
+FavoriteColor = '$favoriteColor',
+FavoritePlace = '$favoritePlace',
+Nickname = '$nickname'
+WHERE ID = $id";
+
+if (!mysqli_query($conn, $query)) {
+die("Update error: " . mysqli_error($conn));
+}
+
+$id = -1;
+$name = "";
+$dob = "";
+$favoriteColor = "";
+$favoritePlace = "";
+$nickname = "";
+}
+
+// DELETE
+else if ($delete) {
+
+$query = "DELETE FROM personalinfo WHERE ID = $id";
+
+if (!mysqli_query($conn, $query)) {
+die("Delete error: " . mysqli_error($conn));
+}
+
+$id = -1;
+}
+
+// Get all personal information
+$query = "SELECT * FROM personalinfo ORDER BY ID";
+
+$result = mysqli_query($conn, $query);
+
+if (!$result) {
+die("Display error: " . mysqli_error($conn));
+}
+?>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Cameron Bellinger Wk 3 Performance Assessment</title>
+
+<style>
+
+body {
+font-family: Arial, sans-serif;
+margin: 30px;
+}
+
+h1 {
+color: darkblue;
+}
+
+table {
+border-collapse: collapse;
+width: 100%;
+margin-bottom: 30px;
+}
+
+table, th, td {
+border: 1px solid black;
+}
+
+th, td {
+padding: 10px;
+text-align: center;
+}
+
+th {
+background-color: lightblue;
+}
+
+tr:nth-child(even) {
+background-color: whitesmoke;
+}
+
+tr:nth-child(odd) {
+background-color: lightgray;
+}
+
+input {
+margin: 5px;
+padding: 7px;
+}
+
+.form-section {
+border: 1px solid black;
+padding: 20px;
+width: 500px;
+}
+
+.button {
+padding: 8px 15px;
+cursor: pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Cameron Bellinger Wk 3 Performance Assessment</h1>
+
+<h2>Stored Personal Information</h2>
+
+<table>
+
+<tr>
+
+<th>ID</th>
+<th>Name</th>
+<th>Date of Birth</th>
+<th>Favorite Color</th>
+<th>Favorite Place To Visit</th>
+<th>Nickname</th>
+<th>Edit</th>
+<th>Delete</th>
+
+</tr>
+
+<?php while ($row = mysqli_fetch_assoc($result)): ?>
+
+<tr>
+
+<td>
+<?php echo htmlspecialchars($row["ID"]); ?>
+</td>
+
+<td>
+<?php echo htmlspecialchars($row["Name"]); ?>
+</td>
+
+<td>
+<?php echo htmlspecialchars($row["DateOfBirth"]); ?>
+</td>
+
+<td>
+<?php echo htmlspecialchars($row["FavoriteColor"]); ?>
+</td>
+
+<td>
+<?php echo htmlspecialchars($row["FavoritePlace"]); ?>
+</td>
+
+<td>
+<?php echo htmlspecialchars($row["Nickname"]); ?>
+</td>
+
+<td>
+
+<form method="POST">
+
+<input
+type="hidden"
+name="id"
+value="<?php echo $row["ID"]; ?>"
+>
+
+<input
+class="button"
+type="submit"
+name="edit"
+value="Edit"
+>
+
+</form>
+
+</td>
+
+<td>
+
+<form method="POST">
+
+<input
+type="hidden"
+name="id"
+value="<?php echo $row["ID"]; ?>"
+>
+
+<input
+class="button"
+type="submit"
+name="delete"
+value="Delete"
+>
+
+</form>
+
+</td>
+
+</tr>
+
+<?php endwhile; ?>
+
+</table>
+
+
+<div class="form-section">
+
+<h2>
+
+<?php
+
+if ($edit) {
+echo "Update Personal Information";
+}
+else {
+echo "Add Personal Information";
+}
+
+?>
+
+</h2>
+
+<form method="POST">
+
+<input
+type="hidden"
+name="id"
+value="<?php echo $id; ?>"
+>
+
+<label>Name:</label>
+<br>
+
+<input
+type="text"
+name="name"
+value="<?php echo htmlspecialchars($name); ?>"
+required
+>
+
+<br>
+
+<label>Date of Birth:</label>
+<br>
+
+<input
+type="date"
+name="dob"
+value="<?php echo htmlspecialchars($dob); ?>"
+required
+>
+
+<br>
+
+<label>Favorite Color:</label>
+<br>
+
+<input
+type="text"
+name="favorite_color"
+value="<?php echo htmlspecialchars($favoriteColor); ?>"
+required
+>
+
+<br>
+
+<label>Favorite Place To Visit:</label>
+<br>
+
+<input
+type="text"
+name="favorite_place"
+value="<?php echo htmlspecialchars($favoritePlace); ?>"
+required
+>
+
+<br>
+
+<label>Nickname:</label>
+<br>
+
+<input
+type="text"
+name="nickname"
+value="<?php echo htmlspecialchars($nickname); ?>"
+required
+>
+
+<br><br>
+
+<?php if ($edit): ?>
+
+<input
+class="button"
+type="submit"
+name="update"
+value="Update Information"
+>
+
+<?php else: ?>
+
+<input
+class="button"
+type="submit"
+name="add"
+value="Add Information"
+>
+
+<?php endif; ?>
+
+</form>
+
+</div>
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{
+// Use IntelliSense to learn about possible attributes.
+// Hover to view descriptions of existing attributes.
+// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+"version": "0.2.0",
+"configurations": [
+
+
+{
+"type": "pwa-chrome",
+"request": "launch",
+"name": "Launch Chrome against localhost",
+"url": "http://localhost/BellingerWeek3pa/user_list.php",
+"webRoot": "${workspaceFolder}"
+}
+]
+}
